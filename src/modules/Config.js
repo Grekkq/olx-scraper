@@ -13,5 +13,6 @@ module.exports = {
         from: 'wojtek@rockandcode.pl',
         to: 'wojtek@rockandcode.pl',
         subject: 'Nowe oferty z olx'
-    }
+    },
+    localStorage: "./tmp/offers.json"
 };
