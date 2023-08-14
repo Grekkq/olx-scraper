@@ -1,34 +1,21 @@
 const Scraper = require('./modules/Scraper');
 const Mail = require('./modules/Mail');
 const Config = require('./modules/Config');
+const Storage = require('./modules/Storage');
 const _ = require('lodash');
-const fs = require('fs');
-let offers = [];
-
-if (fs.existsSync(Config.localStorage)) {
-    var data = JSON.parse(fs.readFileSync(Config.localStorage));
-    if (data) {
-        offers = data
-    }
-    console.log("Offers loaded from file")
-}
+let offers = Storage.loadIfPresent(Config.localStorage);
 
 function getOffers() {
     Scraper().then(updatedOffers => {
         updatedOffers = _.uniqBy([...updatedOffers], "url");
-        newOffers = updatedOffers.filter(n => !offers.map(o => o.url == n.url).some(i => i));
-        console.log(newOffers);
+        const newOffers = updatedOffers.filter(n => !offers.map(o => o.url == n.url).some(i => i));
+        console.log(`Got ${updatedOffers.length} in total, of which ${newOffers.length} are new`)
         if (newOffers.length) {
-            console.log("Sending mail with new offers")
+            console.log("Sending mail with new offers:");
+            console.log(newOffers)
             Mail(newOffers);
         }
-        const jsonContent = JSON.stringify(offers);
-        fs.writeFile(Config.localStorage, jsonContent, 'utf8', function (err) {
-            if (err) {
-                return console.log(err);
-            }
-            console.log("The file was saved!");
-        });
+        Storage.save(Config.localStorage, updatedOffers);
     });
 }
 
